@@ -1,7 +1,33 @@
-{% extends "auctions/layout.html" %}
+{% extends 'auctions/layout.html' %}
 
-{% block body %}
-    <h2>Active Listings</h2>
-
-    TODO
+{% block content %}
+<div class="container">
+    <h1>Open Auctions</h1>
+    {% if user.is_authenticated %}
+    <a href="{% url 'create' %}" class="btn btn-dark mt-3">Create New Auction</a>
+    {% endif %}
+    <hr>
+    <div class="row">
+        {% for auction in auctions %}
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                {% if auction.image_url %}
+                <img class="card-img-top" src="{{ auction.image_url }}" alt="{{ auction.name }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ auction.name }}</h5>
+                    <p class="card-text">{{ auction.description }}</p>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">owner: {{ auction.owner }}</li>
+                        <li class="list-group-item">current bid: {{ auction.current_bid|default:auction.starting_bid }}円
+                        </li>
+                        <li class="list-group-item">ends on: {{ auction.end_time }}</li>
+                    </ul>
+                    <a href="#" class="btn btn-dark mt-3">View Details</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

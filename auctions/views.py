@@ -1,14 +1,21 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
-
+from django.contrib.auth.decorators import login_required
 from .models import User
+from .forms import AuctionForm
+from datetime import datetime
+
+from django.shortcuts import render
+from django.utils import timezone
+from .models import Auction
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    auctions = Auction.objects.filter(end_time__gt=timezone.now())
+    return render(request, "auctions/index.html", {"auctions": auctions})
 
 
 def login_view(request):
@@ -63,4 +70,19 @@ def register(request):
         login(request, user)
         return HttpResponseRedirect(reverse("index"))
     else:
-        return render(request, "auctions/register.html")    
+        return render(request, "auctions/register.html")
+
+
+@login_required
+def create_auction(request):
+    if request.method == "POST":
+        form = AuctionForm(request.POST)
+        if form.is_valid():
+            auction = form.save(commit=False)
+            auction.owner = request.user
+            auction.start_time = timezone.now()
+            auction.save()
+            return redirect("auction_detail", pk=auction.pk)
+    else:
+        form = AuctionForm(initial={"start_time": datetime.now()})
+    return render(request, "auctions/create_auction.html", {"form": form})

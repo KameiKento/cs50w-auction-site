@@ -1,0 +1,54 @@
+{% extends 'auctions/layout.html' %}
+
+{% block title %}
+Create New Auction
+{% endblock %}
+
+{% block head %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'auctions/create.css' %}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <h1>Create New Auction</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="name">Name:</label>
+            {{ form.name }}
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            {{ form.description }}
+        </div>
+        <div class="form-group">
+            <label for="category">Category:</label>
+            {{ form.category }}
+        </div>
+        <div class="form-group">
+            <label for="starting_bid">Starting Bid:</label>
+            <br>
+            {{ form.starting_bid }}
+        </div>
+        <div class="form-group">
+            <label for="start_time">Start Time:</label>
+            <br>
+            {{ form.start_time }}
+        </div>
+        <div class="form-group">
+            <label for="end_time">End Time:</label>
+            <br>
+            {{ form.end_time }}
+        </div>
+        <div class="form-group">
+            <label for="image_url">Image URL:</label>
+            <br>
+            {{ form.image_url }}
+        </div>
+        <button type="submit" class="btn btn-primary">Create Auction</button>
+    </form>
+</div>
+{% endblock %}
