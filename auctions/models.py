@@ -9,6 +9,15 @@ class User(AbstractUser):
 
 
 class Auction(models.Model):
+    CATEGORIES = (
+        ("No Category", "No Category"),
+        ("Electronics", "Electronics"),
+        ("Clothing", "Clothing"),
+        ("Home & Garden", "Home & Garden"),
+        ("Toys & Hobbies", "Toys & Hobbies"),
+        ("Automotive", "Automotive"),
+    )
+
     name = models.CharField(max_length=255)
     description = models.TextField()
     start_time = models.DateTimeField()
@@ -27,7 +36,10 @@ class Auction(models.Model):
     current_bid = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
-    image = models.ImageField(upload_to="auction_images/", null=True, blank=True)
+    image_url = models.URLField(max_length=200, null=True, blank=True)
+    category = models.CharField(
+        max_length=50, choices=CATEGORIES, default="No Category"
+    )
 
     def __str__(self):
         return self.name
