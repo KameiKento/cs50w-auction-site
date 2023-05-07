@@ -1,0 +1,45 @@
+{% extends 'auctions/layout.html' %}
+
+{% block content %}
+<h1>{{ auction.name }}</h1>
+<h2>{{ auction.category }}</h2>
+<p><img src="{{ auction.image_url }}" alt=""></p>
+<p>{{ auction.description }}</p>
+<p>Owner : {{ auction.owner }}</p>
+<p>Current Bid: {{ auction.current_bid }}</p>
+<p>Starting Bid: {{ auction.starting_bid }}</p>
+
+{% if error_message %}
+<h1>{{ error_message }}</h1>
+{% endif %}
+
+
+{% if user != auction.owner and not auction.winner %}
+<form method="post">
+    {% csrf_token %}
+    {{ bid_form.as_p }}
+    <button type="submit" class="btn btn-dark mt-3">Bid</button>
+</form>
+{% elif user.is_authenticated and user == auction.owner and not auction.winner %}
+<form method="get">
+    <button type="submit" name="close_auction" value="true" class="btn btn-dark mt-3">Close auction</button>
+</form>
+{% endif %}
+
+
+{% if auction.winner != user and auction.winner %}
+<h2>This auction was closed. Winner is {{ auction.winner }}!</h2>
+{% elif auction.winner == user %}
+<h2>Congratulations! You are the winner of the auction!</h2>
+{% endif %}
+<hr>
+
+<h3>Comments</h3>
+<a href="{% url 'comment' pk=auction.pk %}" class="btn btn-dark mt-3">Create New Comment</a>
+<ul>
+    {% for comment in comments %}
+    <p>{{ comment.user }} : {{ comment.text }}</p>
+    {% endfor %}
+</ul>
+
+{% endblock %}

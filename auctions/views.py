@@ -1,16 +1,16 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, redirect
+from django.http import HttpResponseRedirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from .models import User
-from .forms import AuctionForm
+from .models import User, Auction, Comment, Bid
+from .forms import AuctionForm, BidForm, CommentForm
 from datetime import datetime
+from django.contrib import messages
 
 from django.shortcuts import render
 from django.utils import timezone
-from .models import Auction
 
 
 def index(request):
@@ -86,3 +86,73 @@ def create_auction(request):
     else:
         form = AuctionForm(initial={"start_time": datetime.now()})
     return render(request, "auctions/create_auction.html", {"form": form})
+
+
+@login_required
+def auction_detail(request, pk):
+    # オークションを取得する
+    auction = get_object_or_404(Auction, pk=pk)
+
+    # オークションに対するコメントを取得する
+    comments = Comment.objects.filter(auction=auction)
+
+    # オークションに対する入札を取得する
+    bids = Bid.objects.filter(auction=auction)
+
+    if request.method == "POST":
+        bid_form = BidForm(
+            auction=auction,
+            bidder=request.user,
+            data=request.POST,
+            initial={"bidder": request.user, "auction": auction},
+        )
+        if bid_form.is_valid():
+            bid_form.save()
+            return redirect("auction_detail", pk=pk)
+
+    elif request.method == "GET" and request.GET.get("close_auction"):
+        if auction.owner == request.user:
+            auction.close()
+            messages.success(request, "Auction closed successfully!")
+            return redirect("index")
+
+    else:
+        bid_form = BidForm(
+            auction=auction,
+            bidder=request.user,
+            initial={"bidder": request.user, "auction": auction},
+        )
+
+    # テンプレートコンテキストを作成する
+    context = {
+        "auction": auction,
+        "comments": comments,
+        "bids": bids,
+        "bid_form": bid_form,
+        "user": request.user,
+        "pk": pk,
+    }
+
+    if not bid_form.is_valid() and bid_form.errors.get("amount"):
+        context["error_message"] = bid_form.errors["amount"][0]
+
+    # オークション詳細テンプレートをレンダリングする
+    return render(request, "auctions/auction_detail.html", context=context)
+
+
+def create_comment(request, pk):
+    auction = get_object_or_404(Auction, pk=pk)
+    if request.method == "POST":
+        comment_form = CommentForm(
+            auction=auction,
+            user=request.user,
+            data=request.POST,
+            initial={"user": request.user, "auction": auction},
+        )
+
+        if comment_form.is_valid():
+            comment_form.save()
+            return redirect("auction_detail", pk=pk)
+
+    comment_form = CommentForm(auction=auction, user=request.user)
+    return render(request, "auctions/add_comment.html", {"comment_form": comment_form})

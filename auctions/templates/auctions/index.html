@@ -23,7 +23,7 @@
                         </li>
                         <li class="list-group-item">ends on: {{ auction.end_time }}</li>
                     </ul>
-                    <a href="#" class="btn btn-dark mt-3">View Details</a>
+                    <a href="{% url 'auction_detail' pk=auction.id %}" class="btn btn-dark mt-3">View Details</a>
                 </div>
             </div>
         </div>

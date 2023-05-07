@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -49,6 +50,12 @@ class Auction(models.Model):
             self.current_bid = bid_amount
         else:
             self.current_bid = self.starting_bid
+        self.save()
+
+    def close(self):
+        if self.current_bid is not None:
+            self.winner = Bid.objects.get(auction=self, amount=self.current_bid).bidder
+        self.end_time = timezone.now()
         self.save()
 
 
