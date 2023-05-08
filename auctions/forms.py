@@ -1,6 +1,6 @@
 from django import forms
 from .models import Auction
-from .models import Bid, Comment
+from .models import Bid, Comment, WatchList
 
 
 class AuctionForm(forms.ModelForm):
@@ -78,3 +78,8 @@ class CommentForm(forms.ModelForm):
         if commit:
             comment.save()
         return comment
+    
+class WatchlistForm(forms.ModelForm):
+    class Meta:
+        model = WatchList
+        exclude = ['user', 'auction']

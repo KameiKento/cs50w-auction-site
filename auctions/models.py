@@ -6,6 +6,9 @@ from django.utils import timezone
 
 
 class User(AbstractUser):
+    watchlist = models.ManyToManyField(
+        "auctions.Auction", related_name="watched_auctions", blank=True
+    )
     pass
 
 
@@ -23,7 +26,9 @@ class Auction(models.Model):
     description = models.TextField()
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="owned_auctions"
+    )
     winner = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -40,6 +45,10 @@ class Auction(models.Model):
     image_url = models.URLField(max_length=200, null=True, blank=True)
     category = models.CharField(
         max_length=50, choices=CATEGORIES, default="No Category"
+    )
+
+    watchers = models.ManyToManyField(
+        User, through="WatchList", related_name="watchlist_auctions"
     )
 
     def __str__(self):
@@ -93,3 +102,15 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user} commented on {self.auction}"
+
+
+class WatchList(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="watchlists")
+    auction = models.ForeignKey(Auction, on_delete=models.CASCADE)
+    date_added = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "auction")
+
+    def __str__(self) -> str:
+        return f"{self.user} is listing {self.auction}"

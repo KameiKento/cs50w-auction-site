@@ -4,8 +4,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from .models import User, Auction, Comment, Bid
-from .forms import AuctionForm, BidForm, CommentForm
+from .models import User, Auction, Comment, Bid, WatchList
+from .forms import AuctionForm, BidForm, CommentForm, WatchlistForm
 from datetime import datetime
 from django.contrib import messages
 
@@ -156,3 +156,52 @@ def create_comment(request, pk):
 
     comment_form = CommentForm(auction=auction, user=request.user)
     return render(request, "auctions/add_comment.html", {"comment_form": comment_form})
+
+
+@login_required
+def add_to_watchlist(request, pk):
+    auction = get_object_or_404(Auction, pk=pk)
+    if request.method == "POST":
+        form = WatchlistForm(request.POST)
+        if form.is_valid():
+            watchlist_item = form.save(commit=False)
+            watchlist_item.user = request.user
+            watchlist_item.auction = auction
+            watchlist_item.save()
+            return redirect("auction_detail", pk=pk)
+    else:
+        form = WatchlistForm()
+
+    return render(
+        request, "auctions/watchlist_add.html", {"form": form, "auction": auction}
+    )
+
+
+@login_required
+def watchlist(request):
+    auctions = request.user.watchlists.all()
+    return render(request, "auctions/watchlist.html", {"auctions": auctions})
+
+
+@login_required
+def remove_from_watchlist(request):
+    if request.method == "POST":
+        auction_id = request.POST.get("auction_id")
+        if auction_id:
+            try:
+                auction = Auction.objects.get(pk=auction_id)
+                watchlist_item = WatchList.objects.get(
+                    user=request.user, auction=auction
+                )
+                watchlist_item.delete()
+                messages.success(
+                    request, f"{auction.name} was removed from your watchlist."
+                )
+            except (Auction.DoesNotExist, WatchList.DoesNotExist):
+                messages.error(
+                    request,
+                    "The selected item could not be removed from your watchlist.",
+                )
+        else:
+            messages.error(request, "Invalid request, please try again.")
+    return redirect("watchlist")
